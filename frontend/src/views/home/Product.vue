@@ -2,7 +2,7 @@
   <div class="customer-view">
     <el-row>
       <el-col :span="24">
-        <h1>Customer Management</h1>
+        <h1>Product Management</h1>
       </el-col>
     </el-row>
     <el-row>
@@ -197,3 +197,4 @@ export default {
   }
 }
 </style>
+

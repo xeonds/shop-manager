@@ -4,12 +4,12 @@
 			<template #header>
 				<el-text>登录</el-text>
 			</template>
-			<el-form :rules="rules">
-				<el-form-item label="用户名">
+			<el-form :model="form" :rules="rules" ref="form">
+				<el-form-item label="用户名" prop="username">
 					<el-input placeholder="请输入用户名" v-model="form.username"></el-input>
 				</el-form-item>
-				<el-form-item label="密码">
-					<el-input placeholder="请输入密码" v-model="form.password"></el-input>
+				<el-form-item label="密码" prop="password">
+					<el-input placeholder="请输入密码" v-model="form.password" type="password"></el-input>
 				</el-form-item>
 				<el-form-item>
 					<el-button type="primary" plain @click="onSubmit">登录</el-button>
@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import admin from '../api/admin';
+import authAPI from '../api/auth';
 
 export default {
 	data() {
@@ -43,26 +43,27 @@ export default {
 	},
 	methods: {
 		async onSubmit() {
-			await admin.login(formData.username, formData.password)
-				.then(res => {
-					if (res.code == 200) {
-						this.$message({
-							message: '登录成功',
-							type: 'success'
-						})
-						this.$router.push({ path: '/main/dashboard' })
-					} else {
-						this.$message({
-							message: res.message,
-							type: 'error'
-						})
-					}
-				})
-				.catch(err => {
-					console.log(err)
-				})
+			try {
+				await this.$refs.form.validate()
+				const res = await authAPI.login(this.form.username, this.form.password)
+				if (res.code !== 200) {
+					throw new Error(res.data.message)
+				}
+				this.$store.commit('setToken', res.data.token)
+				this.$message.success('Login success')
+				this.$router.push({ path: '/main/dashboard' })
+			} catch (error) {
+				this.$message.error('Login failed: ' + error.message)
+			}
 		}
 	},
+	mounted() {
+		window.addEventListener('keydown', (e) => {
+			if (e.key == 'Enter') {
+				this.onSubmit()
+			}
+		})
+	}
 };
 </script>
 

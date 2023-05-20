@@ -6,8 +6,10 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/spf13/viper"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -24,10 +26,12 @@ type Config struct {
 		Host string
 		Port string
 	}
-	Admin struct {
-		Username string
-		Password string
-	}
+	Admin  Admin
+	Secret string
+}
+type Admin struct {
+	Username string
+	Password string
 }
 
 // router handlers
@@ -45,17 +49,6 @@ func InitRouter() {
 		log.Fatal(err)
 	}
 	r.NoRoute(gin.WrapH(http.FileServer(http.FS(subFS))))
-}
-
-// database actions
-func InitDB() error {
-	var err error
-	db, err = gorm.Open(sqlite.Open("books.db"), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("连接数据库失败：%v", err)
-	}
-	db.AutoMigrate(&Customer{}, &Product{}, &Order{})
-	return nil
 }
 func CreateCustomer(c *gin.Context) {
 	var customer Customer
@@ -191,6 +184,30 @@ func DeleteOrder(c *gin.Context) {
 	db.Delete(&order)
 	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
 }
+func Login(c *gin.Context) {
+	// get admin info from viper and compare with the request body
+	var admin Admin
+	if err := c.ShouldBindJSON(&admin); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if admin.Username != config.Admin.Username || admin.Password != config.Admin.Password {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户名或密码错误"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "登录成功", "token": genToken(admin.Username, "secret")})
+}
+
+// database actions
+func InitDB() error {
+	var err error
+	db, err = gorm.Open(sqlite.Open("books.db"), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("连接数据库失败：%v", err)
+	}
+	db.AutoMigrate(&Customer{}, &Product{}, &Order{})
+	return nil
+}
 
 // utilities
 func InitConfig() {
@@ -227,6 +244,7 @@ func CreateDefaultConfig(filename string) error {
 	viper.SetDefault("server.port", "8080")
 	viper.SetDefault("admin.username", "admin")
 	viper.SetDefault("admin.password", "admin")
+	viper.SetDefault("secret", "super-secret-key")
 	if err := viper.WriteConfigAs(filename); err != nil {
 		return err
 	}
@@ -235,6 +253,23 @@ func CreateDefaultConfig(filename string) error {
 func ReplaceInvalidChars(name string) string {
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	return re.ReplaceAllString(name, "_")
+}
+func genToken(userID string, secretKey string) string {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := jwt.MapClaims{
+		"userID": userID,
+		"exp":    time.Now().Add(time.Hour * 24).Unix(),
+	}
+
+	token.Claims = claims
+
+	tokenString, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		return ""
+	}
+
+	return tokenString
 }
 
 // main

@@ -6,7 +6,7 @@
 					<el-menu-item class="title">Shop Manager</el-menu-item>
 					<el-menu-item index="1" route="/main/dashboard">Dashboard</el-menu-item>
 					<el-menu-item index="2" route="/main/customer">Customer Manage</el-menu-item>
-					<el-menu-item index="3" route="/main/store">Store Manage</el-menu-item>
+					<el-menu-item index="3" route="/main/product">Product Manage</el-menu-item>
 				</el-menu>
 			</el-header>
 		</el-affix>
@@ -26,6 +26,8 @@
 </template>
 
 <script>
+import isLogin from '../utils/isLogin';
+
 export default {
 	name: 'Home',
 	data() {
@@ -37,6 +39,14 @@ export default {
 		handleSelect(key, keyPath) {
 			console.log(key, keyPath);
 		}
+	},
+	mounted() {
+		// simple login check
+		// if (isLogin()) {
+		// 	this.$router.push({ path: '/main/dashboard' })
+		// } else {
+		// 	this.$router.push({ path: '/login' })
+		// }
 	}
 }
 </script>
