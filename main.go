@@ -37,175 +37,63 @@ type Admin struct {
 // router handlers
 func InitRouter() {
 	r = gin.Default()
+
 	apiRouter := r.Group("/api")
 
-	apiRouter.GET("/customers", GetCustomers)
-	apiRouter.GET("/customers/:id", GetCustomer)
-	apiRouter.POST("/customers", CreateCustomer)
-	apiRouter.PUT("/customers/:id", UpdateCustomer)
-	apiRouter.DELETE("/customers/:id", DeleteCustomer)
+	customerRouter := apiRouter.Group("/customers")
+	customerRouter.GET("", GetCustomers)
+	customerRouter.GET("/:id", GetCustomer)
+	customerRouter.POST("", CreateCustomer)
+	customerRouter.PUT("/:id", UpdateCustomer)
+	customerRouter.DELETE("/:id", DeleteCustomer)
+
+	productRouter := apiRouter.Group("/products")
+	productRouter.GET("", GetProducts)
+	productRouter.GET("/:id", GetProduct)
+	productRouter.POST("", CreateProduct)
+	productRouter.PUT("/:id", UpdateProduct)
+	productRouter.DELETE("/:id", DeleteProduct)
+
+	orderRouter := apiRouter.Group("/orders")
+	orderRouter.GET("", GetOrders)
+	orderRouter.GET("/:id", GetOrder)
+	orderRouter.POST("", CreateOrder)
+	orderRouter.PUT("/:id", UpdateOrder)
+	orderRouter.DELETE("/:id", DeleteOrder)
+
+	purchaseRouter := apiRouter.Group("/purchases")
+	purchaseRouter.GET("", GetPurchases)
+	purchaseRouter.GET("/:id", GetPurchase)
+	purchaseRouter.POST("", CreatePurchase)
+	purchaseRouter.PUT("/:id", UpdatePurchase)
+	purchaseRouter.DELETE("/:id", DeletePurchase)
+
+	vipCardRouter := apiRouter.Group("/vip-cards")
+	vipCardRouter.GET("", GetVIPCards)
+	vipCardRouter.GET("/:id", GetVIPCard)
+	vipCardRouter.POST("", CreateVIPCard)
+	vipCardRouter.PUT("/:id", UpdateVIPCard)
+	vipCardRouter.DELETE("/:id", DeleteVIPCard)
+
+	apiRouter.Group("/auth").POST("/login", Login)
+	apiRouter.Group("/database").POST("/backup", BackupDB)
+	apiRouter.Group("/database").POST("/restore", RestoreDB)
+
 	subFS, err := fs.Sub(f, "frontend/dist")
 	if err != nil {
 		log.Fatal(err)
 	}
 	r.NoRoute(gin.WrapH(http.FileServer(http.FS(subFS))))
 }
-func CreateCustomer(c *gin.Context) {
-	var customer Customer
-	if err := c.ShouldBindJSON(&customer); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	db.Create(&customer)
-	c.JSON(http.StatusOK, customer)
-}
-func GetCustomers(c *gin.Context) {
-	var customers []Customer
-	if err := db.First(&customers).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	c.JSON(http.StatusOK, customers)
-}
-func GetCustomer(c *gin.Context) {
-	var customer Customer
-	id := c.Param("id")
-	if err := db.First(&customer, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	c.JSON(http.StatusOK, customer)
-}
-func UpdateCustomer(c *gin.Context) {
-	var customer Customer
-	id := c.Param("id")
-	if err := db.First(&customer, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	if err := c.ShouldBindJSON(&customer); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	db.Save(&customer)
-	c.JSON(http.StatusOK, customer)
-}
-func DeleteCustomer(c *gin.Context) {
-	var customer Customer
-	id := c.Param("id")
-	if err := db.First(&customer, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	db.Delete(&customer)
-	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
-}
-func CreateProduct(c *gin.Context) {
-	var product Product
-	if err := c.ShouldBindJSON(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	db.Create(&product)
-	c.JSON(http.StatusOK, product)
-}
-func GetProduct(c *gin.Context) {
-	var product Product
-	id := c.Param("id")
-	if err := db.First(&product, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	c.JSON(http.StatusOK, product)
-}
-func UpdateProduct(c *gin.Context) {
-	var product Product
-	id := c.Param("id")
-	if err := db.First(&product, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	if err := c.ShouldBindJSON(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	db.Save(&product)
-	c.JSON(http.StatusOK, product)
-}
-func DeleteProduct(c *gin.Context) {
-	var product Product
-	id := c.Param("id")
-	if err := db.First(&product, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	db.Delete(&product)
-	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
-}
-func CreateOrder(c *gin.Context) {
-	var order Order
-	if err := c.ShouldBindJSON(&order); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	db.Create(&order)
-	c.JSON(http.StatusOK, order)
-}
-func GetOrder(c *gin.Context) {
-	var order Order
-	id := c.Param("id")
-	if err := db.First(&order, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	c.JSON(http.StatusOK, order)
-}
-func UpdateOrder(c *gin.Context) {
-	var order Order
-	id := c.Param("id")
-	if err := db.First(&order, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	if err := c.ShouldBindJSON(&order); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	db.Save(&order)
-	c.JSON(http.StatusOK, order)
-}
-func DeleteOrder(c *gin.Context) {
-	var order Order
-	id := c.Param("id")
-	if err := db.First(&order, id).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
-		return
-	}
-	db.Delete(&order)
-	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
-}
-func Login(c *gin.Context) {
-	// get admin info from viper and compare with the request body
-	var admin Admin
-	if err := c.ShouldBindJSON(&admin); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if admin.Username != config.Admin.Username || admin.Password != config.Admin.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "用户名或密码错误"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "登录成功", "token": genToken(admin.Username, "secret")})
-}
 
 // database actions
 func InitDB() error {
 	var err error
-	db, err = gorm.Open(sqlite.Open("books.db"), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open("shop-manager.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("连接数据库失败：%v", err)
 	}
-	db.AutoMigrate(&Customer{}, &Product{}, &Order{})
+	db.AutoMigrate(&Customer{}, &Product{}, &Order{}, &Purchase{}, &VIPCard{})
 	return nil
 }
 

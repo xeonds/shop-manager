@@ -36,7 +36,7 @@ export default {
 				],
 				password: [
 					{ required: true, message: '请输入密码', trigger: 'blur' },
-					{ min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+					{ min: 3, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
 				]
 			}
 		};
@@ -46,10 +46,7 @@ export default {
 			try {
 				await this.$refs.form.validate()
 				const res = await authAPI.login(this.form.username, this.form.password)
-				if (res.code !== 200) {
-					throw new Error(res.data.message)
-				}
-				this.$store.commit('setToken', res.data.token)
+				this.$store.commit('SET_TOKEN', res.token)
 				this.$message.success('Login success')
 				this.$router.push({ path: '/main/dashboard' })
 			} catch (error) {
@@ -73,5 +70,8 @@ export default {
 	justify-content: center;
 	align-items: center;
 	height: 100vh;
+	background-image: url('../assets/bg.png');
+	background-size: cover;
+	background-repeat: no-repeat;
 }
 </style>

@@ -2,7 +2,7 @@
   <div class="customer-view">
     <el-row>
       <el-col :span="24">
-        <h1>Customer Management</h1>
+        <h1>客户管理</h1>
       </el-col>
     </el-row>
     <el-row>
@@ -10,61 +10,85 @@
         <el-card>
           <template #header>
             <div class="card-header">
-              <el-text>All Customers</el-text>
-              <el-button plain type="primary" @click="showCreateCustomer">Create New Customer</el-button>
+              <el-text>全部客户</el-text>
+              <el-button plain type="primary" @click="handleCreateCustomer">添加客户</el-button>
             </div>
           </template>
           <el-table :data="filteredCustomerList" style="width: 100%">
             <el-table-column type="selection"></el-table-column>
             <el-table-column prop="id" label="ID"></el-table-column>
-            <el-table-column prop="name" label="Name"></el-table-column>
-            <el-table-column prop="sex" label="Sex"></el-table-column>
-            <el-table-column prop="email" label="Email"></el-table-column>
-            <el-table-column prop="phone" label="Phone"></el-table-column>
+            <el-table-column prop="name" label="姓名"></el-table-column>
+            <el-table-column prop="gender" label="性别"></el-table-column>
+            <el-table-column prop="phone" label="手机号"></el-table-column>
+            <el-table-column prop="order" label="订单历史">
+              <template #default="{ row }">
+                <el-button type="primary" @click="handleShowOrder(row)" link>查看</el-button>
+              </template>
+            </el-table-column>
+            <el-table-column prop="vip_card" label="VIP信息">
+              <template #default="{ row }">
+                <el-button v-if="row.is_vip" type="primary" @click="handleEditCustomer(row)" link>查看</el-button>
+                <el-text v-else>非VIP</el-text>
+              </template>
+            </el-table-column>
             <el-table-column label="Operation">
               <template #header>
-                <el-input v-model="search" placeholder="Type to search" />
+                <el-input v-model="search" placeholder="搜索" />
               </template>
               <template #default="{ row }">
-                <el-button link type="primary" @click="handleEditCustomer(row)">Edit</el-button>
-                <el-button link type="primary" @click="handleDeleteCustomer(row)">Delete</el-button>
+                <el-button link type="primary" @click="handleEditCustomer(row)">编辑</el-button>
+                <el-button link type="primary" @click="handleDeleteCustomer(row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-card>
       </el-col>
     </el-row>
-    <el-dialog v-model="dialogVisible.create" title="Create Customer">
-      <el-form :model="customer" :rules="rules" label-width="120px" ref="customerNew">
-        <el-form-item label="Name" prop="name">
+    <el-dialog v-model="dialogVisible.create" :title="dialogVisible.edit ? '编辑客户' : '添加客户'">
+      <el-form :model="customer" :rules="rules" label-width="120px" ref="customer">
+        <el-form-item label="姓名" prop="name">
           <el-input v-model="customer.name"></el-input>
         </el-form-item>
-        <el-form-item label="Email" prop="email">
-          <el-input v-model="customer.email"></el-input>
+        <el-form-item label="性别" prop="gender">
+          <el-radio-group v-model="customer.gender">
+            <el-radio label="男" />
+            <el-radio label="女" />
+          </el-radio-group>
         </el-form-item>
-        <el-form-item label="Phone" prop="phone">
+        <el-form-item label="手机号" prop="phone">
           <el-input v-model="customer.phone"></el-input>
         </el-form-item>
+        <el-form-item label="是否VIP" prop="is_vip">
+          <el-switch v-model="customer.is_vip" />
+        </el-form-item>
+        <el-form-item label="卡号" prop="id" v-if="customer.is_vip">
+          <el-input v-model="customer.vip_card.id" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="会员卡余额" prop="balance" v-if="customer.is_vip">
+          <el-input-number v-model.number="customer.vip_card.balance" :precision="2" :step="100" />
+        </el-form-item>
+        <el-form-item label="会员卡折扣" prop="discount" v-if="customer.is_vip">
+          <el-input-number v-model.number="customer.vip_card.discount" :precision="2" :step="0.01" :min="0" :max="1" />
+        </el-form-item>
+        <el-form-item label="会员卡备注" prop="note" v-if="customer.is_vip">
+          <el-input v-model="customer.vip_card.note" type="textarea"></el-input>
+        </el-form-item>
+        <el-form-item label="客户备注" prop="note">
+          <el-input v-model="customer.note" type="textarea"></el-input>
+        </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm('customerNew')">Save</el-button>
+          <el-button type="primary" @click="submitForm('customer')">保存</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
-    <el-dialog v-model="dialogVisible.edit" title="Edit Customer">
-      <el-form :model="customer" :rules="rules" label-width="120px" ref="customerEdit">
-        <el-form-item label="Name" prop="name">
-          <el-input v-model="customer.name"></el-input>
-        </el-form-item>
-        <el-form-item label="Email" prop="email">
-          <el-input v-model="customer.email"></el-input>
-        </el-form-item>
-        <el-form-item label="Phone" prop="phone">
-          <el-input v-model="customer.phone"></el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="submitForm('customerEdit')">Save</el-button>
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="dialogVisible.order" title="历史订单">
+      <el-table :data="customer.order">
+        <el-table-column prop="id" label="订单ID"></el-table-column>
+        <el-table-column prop="time" label="订单时间"></el-table-column>
+        <el-table-column prop="product" label="商品名称"></el-table-column>
+        <el-table-column prop="count" label="商品数量"></el-table-column>
+        <el-table-column prop="cost" label="总计花费"></el-table-column>
+      </el-table>
     </el-dialog>
   </div>
 </template>
@@ -78,28 +102,28 @@ export default {
       customer: {
         name: '',
         email: '',
-        phone: ''
+        phone: '',
+        vip_card: {
+          id: 0,
+          balance: 0,
+          discount: 0,
+          note: '已禁用'
+        }
       },
       rules: {
         name: [
-          { required: true, message: 'Please input customer name', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: 'Please input customer email', trigger: 'blur' },
-          { type: 'email', message: 'Please input correct email format', trigger: ['blur', 'change'] }
+          { required: true, message: '请输入客户姓名', trigger: 'blur' }
         ],
         phone: [
-          { required: true, message: 'Please input customer phone', trigger: 'blur' },
-          { pattern: /^[0-9]*$/, message: 'Please input correct phone format', trigger: ['blur', 'change'] }
+          { required: true, message: '输入手机号', trigger: 'blur' },
+          { pattern: /^[0-9]*$/, message: '请输入正确的手机号', trigger: ['blur', 'change'] }
         ]
       },
-      customerList: [
-        { id: 1, name: 'John Doe', email: 'johndoe@example.com', phone: '1234567890', premier: true, sex: "man" },
-        { id: 2, name: 'Jane Doe', email: 'janedoe@example.com', phone: '0987654321', premier: true, sex: "woman" }
-      ],
+      customerList: [],
       dialogVisible: {
         create: false,
-        edit: false
+        edit: false,
+        order: false,
       },
       search: '',
     }
@@ -108,7 +132,6 @@ export default {
     filteredCustomerList() {
       return this.customerList.filter(customer => {
         return customer.name.toLowerCase().includes(this.search.toLowerCase())
-          || customer.email.toLowerCase().includes(this.search.toLowerCase())
           || customer.phone.toLowerCase().includes(this.search.toLowerCase())
           || customer.id.toString().includes(this.search)
       })
@@ -119,31 +142,29 @@ export default {
     },
     premierCustomers() {
       return this.customerList.filter(customer => { customer.premier == true }).length
-    }
+    },
   },
   methods: {
     async showCustomerList() {
-      try {
-        const response = await customerAPI.getCustomers()
-        this.customerList = response.data
-      } catch (error) {
-        this.$message.error('Get customer list failed')
-      }
-    },
-    showCreateCustomer() {
-      this.dialogVisible.create = true
-    },
-    showEditCustomer() {
-      this.dialogVisible.edit = true
+      await customerAPI.getCustomers().then((res) => {
+        this.customerList = res
+      }).catch((error) => {
+        this.$message.error('获取客户数据失败')
+      })
     },
     async submitForm(formName) {
       try {
         await this.$refs[formName].validate()
-        await customerAPI.createCustomer(this.customer)
-        this.$message.success('Create customer success')
+        if (this.dialogVisible.edit) {
+          await customerAPI.updateCustomer(this.customer.id, this.customer)
+          this.$message.success('修改顾客信息成功')
+        } else {
+          await customerAPI.createCustomer(this.customer)
+          this.$message.success('创建顾客成功')
+        }
         await this.showCustomerList()
       } catch (error) {
-        this.$message.error('Create customer failed: ' + error || 'Unknown error')
+        this.$message.error('创建顾客失败: ' + error || '未知错误')
       } finally {
         this.resetForm(formName)
         this.dialogVisible.create = false
@@ -153,26 +174,35 @@ export default {
     resetForm(formName) {
       this.$refs[formName].resetFields()
     },
+    handleCreateCustomer() {
+      this.customer = Object.assign({}, this.customer)
+      this.dialogVisible.create = true
+    },
     handleEditCustomer(customer) {
       this.customer = customer
+      this.dialogVisible.create = true
       this.dialogVisible.edit = true
     },
     handleDeleteCustomer(customer) {
-      this.$confirm(`Are you sure to delete ${customer.name}?`, 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
+      this.$confirm(`确认删除顾客 ${customer.name}?`, '注意', {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
         type: 'warning'
       }).then(async () => {
         try {
           await customerAPI.deleteCustomer(customer.id)
-          this.$message.success('Delete customer success')
+          this.$message.success('删除成功')
           await this.showCustomerList()
         } catch (error) {
-          this.$message.error('Delete customer failed: ' + error || 'Unknown error')
+          this.$message.error('删除顾客失败: ' + error || '未知错误')
         }
       }).catch(() => {
-        this.$message.info('Delete customer canceled')
+        this.$message.info('取消删除')
       })
+    },
+    handleShowOrder(customer) {
+      this.dialogVisible.order = true
+      this.customer = customer
     }
   },
   mounted() {
@@ -189,7 +219,6 @@ export default {
 }
 
 .customer-view {
-  max-width: 1000px;
   margin: 0 auto;
 
   .el-row {

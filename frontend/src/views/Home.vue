@@ -3,10 +3,11 @@
 		<el-affix position="top">
 			<el-header>
 				<el-menu mode="horizontal" :default-active="'1'" router>
-					<el-menu-item class="title">Shop Manager</el-menu-item>
-					<el-menu-item index="1" route="/main/dashboard">Dashboard</el-menu-item>
-					<el-menu-item index="2" route="/main/customer">Customer Manage</el-menu-item>
-					<el-menu-item index="3" route="/main/product">Product Manage</el-menu-item>
+					<el-menu-item class="title">商店管理</el-menu-item>
+					<el-menu-item index="1" route="/main/dashboard">总览</el-menu-item>
+					<el-menu-item index="2" route="/main/customer">客户管理</el-menu-item>
+					<el-menu-item index="3" route="/main/product">产品管理</el-menu-item>
+					<el-menu-item index="4" route="/main/finance">财务</el-menu-item>
 				</el-menu>
 			</el-header>
 		</el-affix>
@@ -19,7 +20,7 @@
 		</el-main>
 		<el-footer>
 			<el-divider>
-				Shop Manager &copy; 2023
+				商店管理系统 &copy; 2023
 			</el-divider>
 		</el-footer>
 	</el-scrollbar>

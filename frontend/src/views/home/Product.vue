@@ -1,8 +1,8 @@
 <template>
-  <div class="customer-view">
+  <div class="product-view">
     <el-row>
       <el-col :span="24">
-        <h1>Product Management</h1>
+        <h1>商品管理</h1>
       </el-col>
     </el-row>
     <el-row>
@@ -10,59 +10,142 @@
         <el-card>
           <template #header>
             <div class="card-header">
-              <el-text>All Customers</el-text>
-              <el-button plain type="primary" @click="showCreateCustomer">Create New Customer</el-button>
+              <el-text>全部商品</el-text>
+              <el-button plain type="primary" @click="handleCreate">添加商品</el-button>
             </div>
           </template>
-          <el-table :data="filteredCustomerList" style="width: 100%">
+          <el-table :data="filteredProductList" style="width: 100%" max-height="512">
             <el-table-column type="selection"></el-table-column>
             <el-table-column prop="id" label="ID"></el-table-column>
-            <el-table-column prop="name" label="Name"></el-table-column>
-            <el-table-column prop="sex" label="Sex"></el-table-column>
-            <el-table-column prop="email" label="Email"></el-table-column>
-            <el-table-column prop="phone" label="Phone"></el-table-column>
-            <el-table-column label="Operation">
+            <el-table-column prop="name" label="产品名称"></el-table-column>
+            <el-table-column prop="brand" label="品牌"></el-table-column>
+            <el-table-column prop="location" label="产地"></el-table-column>
+            <el-table-column prop="description" label="描述"></el-table-column>
+            <el-table-column prop="price" label="价格（元/斤）"></el-table-column>
+            <el-table-column prop="purchase" label="进货量（斤）"></el-table-column>
+            <el-table-column prop="sale" label="销售量（斤）"></el-table-column>
+            <el-table-column prop="quantity" label="库存（斤）"></el-table-column>
+            <el-table-column prop="note" label="备注"></el-table-column>
+            <el-table-column label="操作">
               <template #header>
-                <el-input v-model="search" placeholder="Type to search" />
+                <el-input v-model="search" placeholder="搜索" />
               </template>
               <template #default="{ row }">
-                <el-button link type="primary" @click="handleEditCustomer(row)">Edit</el-button>
-                <el-button link type="primary" @click="handleDeleteCustomer(row)">Delete</el-button>
+                <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
+                <el-button link type="primary" @click="handleDelete(row)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
         </el-card>
       </el-col>
     </el-row>
-    <el-dialog v-model="dialogVisible.create" title="Create Customer">
-      <el-form :model="customer" :rules="rules" label-width="120px" ref="customerNew">
-        <el-form-item label="Name" prop="name">
-          <el-input v-model="customer.name"></el-input>
+    <el-row>
+      <el-col :span="24">
+        <el-card>
+          <template #header>
+            <div class="card-header">
+              <el-text>采购记录</el-text>
+              <el-button plain type="primary" @click="handlePurchase">进货</el-button>
+            </div>
+          </template>
+          <el-table :data="purchaseList" style="width: 100%" max-height="512">
+            <el-table-column prop="id" label="ID"></el-table-column>
+            <el-table-column prop="product.name" label="货物名称"></el-table-column>
+            <el-table-column prop="product.brand" label="品牌"></el-table-column>
+            <el-table-column prop="product.location" label="产地"></el-table-column>
+            <el-table-column prop="supplier" label="供货单位"></el-table-column>
+            <el-table-column prop="quantity" label="采购数量（斤）"></el-table-column>
+            <el-table-column prop="unit_price" label="采购单价（元/斤）"></el-table-column>
+            <el-table-column prop="total_price" label="金额"></el-table-column>
+            <el-table-column prop="paid" label="已付金额"></el-table-column>
+            <el-table-column prop="debt" label="欠款"></el-table-column>
+            <el-table-column prop="note" label="备注"></el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="24">
+        <el-card>
+          <template #header>
+            <div class="card-header">
+              <el-text>销售记录</el-text>
+            </div>
+          </template>
+          <el-table :data="orderList" style="width: 100%" max-height="512">
+            <el-table-column prop="id" label="ID"></el-table-column>
+            <el-table-column prop="product.name" label="货物名称"></el-table-column>
+            <el-table-column prop="product.brand" label="品牌"></el-table-column>
+            <el-table-column prop="quantity" label="销售数量（斤）"></el-table-column>
+            <el-table-column prop="unit_price" label="销售单价（元/斤）"></el-table-column>
+            <el-table-column prop="total_price" label="金额"></el-table-column>
+            <el-table-column prop="discount" label="优惠金额"></el-table-column>
+            <el-table-column prop="discount" label="优惠合计"></el-table-column>
+            <el-table-column prop="paid" label="实收"></el-table-column>
+            <el-table-column prop="payment" label="支付方式"></el-table-column>
+            <el-table-column prop="note" label="备注"></el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
+    <el-dialog v-model="dialogVisible.create" :title="dialogVisible.edit ? '编辑商品' : '添加商品'">
+      <el-form :model="product" :rules="rules" label-width="120px" ref="product">
+        <el-form-item prop="name" label="产品名称">
+          <el-input v-model="product.name"></el-input>
         </el-form-item>
-        <el-form-item label="Email" prop="email">
-          <el-input v-model="customer.email"></el-input>
+        <el-form-item prop="brand" label="品牌">
+          <el-input v-model="product.brand"></el-input>
         </el-form-item>
-        <el-form-item label="Phone" prop="phone">
-          <el-input v-model="customer.phone"></el-input>
+        <el-form-item prop="location" label="产地">
+          <el-input v-model="product.location"></el-input>
+        </el-form-item>
+        <el-form-item prop="description" label="描述">
+          <el-input v-model="product.description" type="textarea"></el-input>
+        </el-form-item>
+        <el-form-item prop="price" label="价格">
+          <el-input-number v-model.number="product.price" :min="0" :step="0.10" :precision="2"></el-input-number>
+        </el-form-item>
+        <el-form-item prop="quantity" label="库存">
+          <el-input-number v-model.number="product.quantity" :min="0" :precision="2"></el-input-number>
+        </el-form-item>
+        <el-form-item prop="note" label="备注">
+          <el-input v-model="product.note" type="textarea"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm('customerNew')">Save</el-button>
+          <el-button type="primary" @click="submitForm('product')">Save</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
-    <el-dialog v-model="dialogVisible.edit" title="Edit Customer">
-      <el-form :model="customer" :rules="rules" label-width="120px" ref="customerEdit">
-        <el-form-item label="Name" prop="name">
-          <el-input v-model="customer.name"></el-input>
+    <el-dialog v-model="dialogVisible.purchase" title="进货">
+      <el-form :model="purchase" :rules="rules" label-width="120px" ref="purchase">
+        <el-form-item label="商品">
+          <el-select v-model="purchase.product" value-key="id" placeholder="请选择进货的商品">
+            <el-option v-for="product in productList" :key="product.id" :label="product.name" :value="product" />
+          </el-select>
         </el-form-item>
-        <el-form-item label="Email" prop="email">
-          <el-input v-model="customer.email"></el-input>
+        <el-form-item prop="supplier" label="供货单位">
+          <el-input v-model="purchase.supplier"></el-input>
         </el-form-item>
-        <el-form-item label="Phone" prop="phone">
-          <el-input v-model="customer.phone"></el-input>
+        <el-form-item prop="unit_price" label="采购单价">
+          <el-input-number v-model.number="purchase.unit_price" :min="0" :step="0.10" :precision="2"></el-input-number>
+        </el-form-item>
+        <el-form-item prop="quantity" label="采购量">
+          <el-input-number v-model.number="purchase.quantity" :min="0" :precision="2"></el-input-number>
+        </el-form-item>
+        <el-form-item prop="total_price" label="总计金额">
+          <el-input-number v-model.number="purchase.total_price" :min="0" :precision="2"></el-input-number>
+        </el-form-item>
+        <el-form-item prop="total_price" label="已付金额">
+          <el-input-number v-model.number="purchase.paid" :min="0" :precision="2"></el-input-number>
+        </el-form-item>
+        <el-form-item prop="total_price" label="欠款">
+          <el-input-number v-model.number="purchase.due" :min="0" :precision="2"></el-input-number>
+        </el-form-item>
+        <el-form-item prop=" note" label="备注">
+          <el-input v-model="purchase.note" type="textarea"></el-input>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitForm('customerEdit')">Save</el-button>
+          <el-button type="primary" @click="submitForm('purchase')">Save</el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -70,113 +153,158 @@
 </template>
 
 <script>
-import customerAPI from '../../api/customer'
+import productAPI from '../../api/product';
+import purchaseAPI from '../../api/purchase';
+import orderAPI from '../../api/order';
 
 export default {
   data() {
     return {
-      customer: {
+      product: {
         name: '',
-        email: '',
-        phone: ''
+        description: '',
+        price: 0.5,
+        count: 0
+      },
+      order: {
+        id: 0,
+        time: '',
+        product: {
+          name: '',
+          description: '',
+          price: 0.5,
+          count: 0
+        },
+        count: 0,
+        cost: 0
+      },
+      purchase: {
+        id: 0,
+        time: '',
+        product: {},
+        count: 0,
+        cost: 0
       },
       rules: {
         name: [
-          { required: true, message: 'Please input customer name', trigger: 'blur' }
-        ],
-        email: [
-          { required: true, message: 'Please input customer email', trigger: 'blur' },
-          { type: 'email', message: 'Please input correct email format', trigger: ['blur', 'change'] }
+          { required: true, message: '请输入客户姓名', trigger: 'blur' }
         ],
         phone: [
-          { required: true, message: 'Please input customer phone', trigger: 'blur' },
-          { pattern: /^[0-9]*$/, message: 'Please input correct phone format', trigger: ['blur', 'change'] }
+          { required: true, message: '输入手机号', trigger: 'blur' },
+          { pattern: /^[0-9]*$/, message: '请输入正确的手机号', trigger: ['blur', 'change'] }
         ]
       },
-      customerList: [
-        { id: 1, name: 'John Doe', email: 'johndoe@example.com', phone: '1234567890', premier: true, sex: "man" },
-        { id: 2, name: 'Jane Doe', email: 'janedoe@example.com', phone: '0987654321', premier: true, sex: "woman" }
-      ],
+      productList: [],
+      orderList: [],
+      purchaseList: [],
       dialogVisible: {
         create: false,
-        edit: false
+        edit: false,
+        purchase: false
       },
       search: '',
     }
   },
   computed: {
-    filteredCustomerList() {
-      return this.customerList.filter(customer => {
-        return customer.name.toLowerCase().includes(this.search.toLowerCase())
-          || customer.email.toLowerCase().includes(this.search.toLowerCase())
-          || customer.phone.toLowerCase().includes(this.search.toLowerCase())
-          || customer.id.toString().includes(this.search)
-      })
-    },
-    men2Women() {
-      return this.customerList.filter(customer => { customer.sex == 'man' }).length
-        + '/' + this.customerList.filter(customer => { customer.sex == 'man' }).length
-    },
-    premierCustomers() {
-      return this.customerList.filter(customer => { customer.premier == true }).length
+    filteredProductList: function () {
+      return this.productList.filter((product) => {
+        return (
+          product.name.toLowerCase().includes(this.search.toLowerCase()) ||
+          product.description.toLowerCase().includes(this.search.toLowerCase()) ||
+          product.price.toString().includes(this.search) ||
+          product.count.toString().includes(this.search)
+        );
+      });
     }
   },
   methods: {
-    async showCustomerList() {
-      try {
-        const response = await customerAPI.getCustomers()
-        this.customerList = response.data
-      } catch (error) {
-        this.$message.error('Get customer list failed')
-      }
+    async showProductList() {
+      await productAPI.getProducts().then((res) => {
+        this.productList = res
+      }).catch((err) => {
+        this.$message.error('获取商品列表失败')
+      })
     },
-    showCreateCustomer() {
-      this.dialogVisible.create = true
+    async showOrderList() {
+      await orderAPI.getOrders().then((res) => {
+        this.orderList = res
+      }).catch((err) => {
+        this.$message.error('获取订单列表失败')
+      })
     },
-    showEditCustomer() {
-      this.dialogVisible.edit = true
+    async showPurchaseList() {
+      await purchaseAPI.getPurchases().then((res) => {
+        this.purchaseList = res
+      }).catch((err) => {
+        this.$message.error('获取采购列表失败')
+      })
     },
     async submitForm(formName) {
       try {
         await this.$refs[formName].validate()
-        await customerAPI.createCustomer(this.customer)
-        this.$message.success('Create customer success')
-        await this.showCustomerList()
+        switch (formName) {
+          case 'product':
+            if (this.dialogVisible.edit) {
+              await productAPI.updateProduct(this.product.id, this.product)
+              this.$message.success('产品更新成功')
+            } else {
+              await productAPI.createProduct(this.product)
+              this.$message.success('产品创建成功')
+            }
+            await this.showProductList()
+            break
+          case 'purchase':
+            await purchaseAPI.createPurchase(this.purchase)
+            this.$message.success('采购成功')
+            await this.showPurchaseList()
+            await this.showProductList()
+            break
+        }
       } catch (error) {
-        this.$message.error('Create customer failed: ' + error || 'Unknown error')
+        this.$message.error('产品创建失败: ' + error || '未知错误')
       } finally {
         this.resetForm(formName)
         this.dialogVisible.create = false
         this.dialogVisible.edit = false
+        this.dialogVisible.purchase = false
       }
     },
     resetForm(formName) {
       this.$refs[formName].resetFields()
     },
-    handleEditCustomer(customer) {
-      this.customer = customer
+    handleCreate() {
+      this.dialogVisible.create = true
+    },
+    handleEdit(product) {
+      this.product = product
+      this.dialogVisible.create = true
       this.dialogVisible.edit = true
     },
-    handleDeleteCustomer(customer) {
-      this.$confirm(`Are you sure to delete ${customer.name}?`, 'Warning', {
-        confirmButtonText: 'OK',
-        cancelButtonText: 'Cancel',
+    handleDelete(product) {
+      this.$confirm(`是否要删除 ${product.name}?`, '注意', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
         type: 'warning'
       }).then(async () => {
         try {
-          await customerAPI.deleteCustomer(customer.id)
-          this.$message.success('Delete customer success')
-          await this.showCustomerList()
+          await productAPI.deleteProduct(product.id)
+          this.$message.success('删除成功')
+          await this.showProductList()
         } catch (error) {
-          this.$message.error('Delete customer failed: ' + error || 'Unknown error')
+          this.$message.error('删除失败: ' + error || '未知错误')
         }
       }).catch(() => {
-        this.$message.info('Delete customer canceled')
+        this.$message.info('已取消删除')
       })
-    }
+    },
+    handlePurchase() {
+      this.dialogVisible.purchase = true
+    },
   },
   mounted() {
-    this.showCustomerList()
+    this.showProductList()
+    this.showPurchaseList()
+    this.showOrderList()
   }
 }
 </script>
@@ -188,8 +316,7 @@ export default {
   align-items: center;
 }
 
-.customer-view {
-  max-width: 1000px;
+.product-view {
   margin: 0 auto;
 
   .el-row {
