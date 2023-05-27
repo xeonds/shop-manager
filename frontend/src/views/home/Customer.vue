@@ -81,13 +81,14 @@
         </el-form-item>
       </el-form>
     </el-dialog>
-    <el-dialog v-model="dialogVisible.order" title="历史订单">
+    <el-dialog v-model="dialogVisible.order" size="large" title="历史订单">
       <el-table :data="customer.order">
         <el-table-column prop="id" label="订单ID"></el-table-column>
-        <el-table-column prop="time" label="订单时间"></el-table-column>
-        <el-table-column prop="product" label="商品名称"></el-table-column>
-        <el-table-column prop="count" label="商品数量"></el-table-column>
-        <el-table-column prop="cost" label="总计花费"></el-table-column>
+        <el-table-column prop="CreatedAt" label="订单时间"></el-table-column>
+        <el-table-column prop="product.name" label="商品名称"></el-table-column>
+        <el-table-column prop="quantity" label="商品数量"></el-table-column>
+        <el-table-column prop="total_price" label="总计花费"></el-table-column>
+        <el-table-column prop="paid" label="实付"></el-table-column>
       </el-table>
     </el-dialog>
   </div>
@@ -201,8 +202,8 @@ export default {
       })
     },
     handleShowOrder(customer) {
-      this.dialogVisible.order = true
       this.customer = customer
+      this.dialogVisible.order = true
     }
   },
   mounted() {

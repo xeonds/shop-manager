@@ -54,7 +54,7 @@ type Order struct {
 	Quantity   float64 `json:"quantity"`                                        //数量
 	UnitPrice  float64 `json:"unit_price"`                                      //单价
 	TotalPrice float64 `json:"total_price"`                                     //总价
-	Discout    float64 `json:"discout"`                                         //折扣
+	Discount   float64 `json:"discount"`                                        //折扣
 	Paid       float64 `json:"paid"`                                            //已付
 	Payment    string  `json:"payment"`                                         //付款方式
 	Note       string  `json:"note"`                                            //备注

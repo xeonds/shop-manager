@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -123,6 +124,23 @@ func CreateOrder(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
 		return
 	}
+	if order.Payment == "会员卡" {
+		var vipCard VIPCard
+		if err := db.First(&vipCard, order.CustomerId).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
+			return
+		}
+		if vipCard.Balance < order.TotalPrice {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "会员卡余额不足"})
+			return
+		}
+		vipCard.Balance -= order.TotalPrice
+		db.Save(&vipCard)
+	}
+	if product.Quantity < order.Quantity {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "库存不足"})
+		return
+	}
 	product.Quantity -= order.Quantity
 	product.Sale += order.Quantity
 	db.Save(&product)
@@ -136,6 +154,20 @@ func GetOrders(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, orders)
+}
+func GetTodayOrdersCount(c *gin.Context) {
+	var orders []Order
+	if err := db.Find(&orders).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
+		return
+	}
+	var count int64 = 0
+	for _, order := range orders {
+		if order.CreatedAt.Format("2006-01-02") == time.Now().Format("2006-01-02") {
+			count++
+		}
+	}
+	c.JSON(http.StatusOK, count)
 }
 func GetOrder(c *gin.Context) {
 	var order Order

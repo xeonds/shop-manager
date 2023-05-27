@@ -77,10 +77,9 @@
             <el-table-column prop="product.name" label="货物名称"></el-table-column>
             <el-table-column prop="product.brand" label="品牌"></el-table-column>
             <el-table-column prop="quantity" label="销售数量（斤）"></el-table-column>
-            <el-table-column prop="unit_price" label="销售单价（元/斤）"></el-table-column>
+            <el-table-column prop="product.price" label="销售单价（元/斤）"></el-table-column>
             <el-table-column prop="total_price" label="金额"></el-table-column>
             <el-table-column prop="discount" label="优惠金额"></el-table-column>
-            <el-table-column prop="discount" label="优惠合计"></el-table-column>
             <el-table-column prop="paid" label="实收"></el-table-column>
             <el-table-column prop="payment" label="支付方式"></el-table-column>
             <el-table-column prop="note" label="备注"></el-table-column>

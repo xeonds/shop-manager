@@ -3,7 +3,7 @@
     <el-row>
       <el-col :span="24">
         <h1>财务</h1>
-        <el-alert title="开发中" type="warning" description="警告：创建订单功能正在开发中，请等待开发完成后再使用" show-icon />
+        <el-alert title="开发中" type="warning" description="警告：功能正在开发中，请等待开发完成后再使用" show-icon />
       </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -67,21 +67,8 @@ export default {
         );
       });
     },
-    men2Women() {
-      return (
-        this.customerList.filter((customer) => {
-          customer.sex == "man";
-        }).length +
-        "/" +
-        this.customerList.filter((customer) => {
-          customer.sex == "man";
-        }).length
-      );
-    },
     premierCustomers() {
-      return this.customerList.filter((customer) => {
-        customer.premier == true;
-      }).length;
+      return this.customerList.filter(customer => customer.is_vip == true).length
     },
   },
   methods: {
