@@ -130,11 +130,11 @@ func CreateOrder(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
 			return
 		}
-		if vipCard.Balance < order.TotalPrice {
+		if vipCard.Balance < order.Paid {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "会员卡余额不足"})
 			return
 		}
-		vipCard.Balance -= order.TotalPrice
+		vipCard.Balance -= order.Paid
 		db.Save(&vipCard)
 	}
 	if product.Quantity < order.Quantity {
