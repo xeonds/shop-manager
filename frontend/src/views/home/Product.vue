@@ -14,8 +14,8 @@
               <el-button plain type="primary" @click="handleCreate">添加商品</el-button>
             </div>
           </template>
-          <el-table :data="filteredProductList" style="width: 100%" max-height="512">
-            <el-table-column type="selection"></el-table-column>
+          <el-table :data="filteredProductList" style="width: 100%" max-height="512" show-summary
+            :summary-method="getProductSummary">
             <el-table-column prop="id" label="ID"></el-table-column>
             <el-table-column prop="name" label="产品名称"></el-table-column>
             <el-table-column prop="brand" label="品牌"></el-table-column>
@@ -48,7 +48,8 @@
               <el-button plain type="primary" @click="handlePurchase">进货</el-button>
             </div>
           </template>
-          <el-table :data="purchaseList" style="width: 100%" max-height="512">
+          <el-table :data="purchaseList" style="width: 100%" max-height="512" show-summary
+            :summary-method="getPurchaseSummary">
             <el-table-column prop="id" label="ID"></el-table-column>
             <el-table-column prop="product.name" label="货物名称"></el-table-column>
             <el-table-column prop="product.brand" label="品牌"></el-table-column>
@@ -77,7 +78,7 @@
               <el-text>销售记录</el-text>
             </div>
           </template>
-          <el-table :data="orderList" style="width: 100%" max-height="512">
+          <el-table :data="orderList" style="width: 100%" max-height="512" show-summary :summary-method="getOrderSummary">
             <el-table-column prop="id" label="ID"></el-table-column>
             <el-table-column prop="product.name" label="货物名称"></el-table-column>
             <el-table-column prop="product.brand" label="品牌"></el-table-column>
@@ -221,7 +222,7 @@ export default {
           product.name.toLowerCase().includes(this.search.toLowerCase()) ||
           product.description.toLowerCase().includes(this.search.toLowerCase()) ||
           product.price.toString().includes(this.search) ||
-          product.count.toString().includes(this.search)
+          product.quantity.toString().includes(this.search)
         );
       });
     }
@@ -344,6 +345,61 @@ export default {
       }).catch(() => {
         this.$message.info('已取消撤销订单')
       })
+    },
+    getProductSummary(param) {
+      const { columns, data } = param
+      const sums = []
+      columns.forEach((column, index) => {
+        switch (index) {
+          case 0:
+            sums[index] = '合计'
+            return
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+            sums[index] = data.reduce((sum, item) => sum + item[column.property], 0).toFixed(2)
+            return
+        }
+      })
+      return sums
+    },
+    getOrderSummary(param) {
+      const { columns, data } = param
+      const sums = []
+      columns.forEach((column, index) => {
+        switch (index) {
+          case 0:
+            sums[index] = '合计'
+            return
+          case 3:
+          case 5:
+          case 6:
+          case 7:
+            sums[index] = data.reduce((sum, item) => sum + item[column.property], 0).toFixed(2)
+            return
+        }
+      })
+      return sums
+    },
+    getPurchaseSummary(param) {
+      const { columns, data } = param
+      const sums = []
+      columns.forEach((column, index) => {
+        switch (index) {
+          case 0:
+            sums[index] = '合计'
+            return
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+          case 9:
+            sums[index] = data.reduce((sum, item) => sum + item[column.property], 0).toFixed(2)
+            return
+        }
+      })
+      return sums
     }
   },
   mounted() {

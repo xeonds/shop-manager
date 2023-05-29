@@ -21,6 +21,7 @@
 
 <script>
 import authAPI from '../api/auth';
+import isLogin from '../utils/isLogin';
 
 export default {
 	data() {
@@ -47,7 +48,8 @@ export default {
 				await this.$refs.form.validate()
 				const res = await authAPI.login(this.form.username, this.form.password)
 				this.$store.commit('SET_TOKEN', res.token)
-				this.$message.success('Login success')
+				localStorage.setItem('token', res.token)
+				this.$message.success('登录成功')
 				this.$router.push({ path: '/main/dashboard' })
 			} catch (error) {
 				this.$message.error('Login failed: ' + error.message)
@@ -60,6 +62,10 @@ export default {
 				this.onSubmit()
 			}
 		})
+		if (isLogin()) {
+			this.$router.push({ path: '/main/dashboard' })
+			this.$message.success('欢迎回来')
+		}
 	}
 };
 </script>

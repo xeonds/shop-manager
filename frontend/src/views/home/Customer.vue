@@ -213,12 +213,6 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .customer-view {
   margin: 0 auto;
 

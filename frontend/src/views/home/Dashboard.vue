@@ -194,6 +194,7 @@ export default {
             await orderAPI.createOrder(this.order)
             await this.showCustomerList()
             await this.showProdctList()
+            await this.getOrdersToday()
             this.$message.success('订单创建成功')
             break
           case 'customerRecharge':
