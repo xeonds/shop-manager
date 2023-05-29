@@ -189,7 +189,44 @@ func UpdateOrder(c *gin.Context) { //这个函数不应使用，因为订单不�
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if order.Recall {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "订单已退货"})
+		return
+	}
+	order.Recall = true
 	db.Save(&order)
+	//创建一个退货订单，数量为原订单数量的负数，总价为原订单总价的负数
+	db.Create(&Order{
+		CustomerId: order.CustomerId,
+		Product:    order.Product,
+		Quantity:   -order.Quantity,
+		UnitPrice:  order.UnitPrice,
+		TotalPrice: -order.TotalPrice,
+		Discount:   order.Discount,
+		Paid:       -order.Paid,
+		Payment:    order.Payment,
+		Note:       "退货订单",
+		Recall:     true,
+	})
+	//回退产品库存
+	var product Product
+	if err := db.First(&product, order.Product.Id).Error; err != nil { // 同时更新产品库存
+		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
+		return
+	}
+	//如果支付方式是会员卡，退款到会员卡
+	if order.Payment == "会员卡" {
+		var vipCard VIPCard
+		if err := db.First(&vipCard, order.CustomerId).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
+			return
+		}
+		vipCard.Balance += order.TotalPrice
+		db.Save(&vipCard)
+	}
+	product.Quantity += order.Quantity
+	product.Sale -= order.Quantity
+	db.Save(&product)
 	c.JSON(http.StatusOK, order)
 }
 func DeleteOrder(c *gin.Context) {
@@ -238,7 +275,7 @@ func GetPurchase(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, purchase)
 }
-func UpdatePurchase(c *gin.Context) { //这个函数不应使用，因为进货记录不应该修改
+func UpdatePurchase(c *gin.Context) {
 	var purchase Purchase
 	id := c.Param("id")
 	if err := db.First(&purchase, id).Error; err != nil {
@@ -249,7 +286,33 @@ func UpdatePurchase(c *gin.Context) { //这个函数不应使用，因为进货�
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if purchase.Recall {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "订单已退货"})
+		return
+	}
+	purchase.Recall = true
 	db.Save(&purchase)
+	//新建一个退货订单，数量为原订单数量的负数，总价为原订单总价的负数，清除id
+	db.Create(&Purchase{
+		Product:    purchase.Product,
+		Supplier:   purchase.Supplier,
+		Quantity:   -purchase.Quantity,
+		UnitPrice:  purchase.UnitPrice,
+		TotalPrice: -purchase.TotalPrice,
+		Paid:       -purchase.Paid,
+		Debt:       -purchase.Debt,
+		Note:       "撤单订单",
+		Recall:     true,
+	})
+	//回退产品库存
+	var product Product
+	if err := db.First(&product, purchase.Product.Id).Error; err != nil { // 同时更新产品库存
+		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
+		return
+	}
+	product.Quantity -= purchase.Quantity
+	product.Purchase -= purchase.Quantity
+	db.Save(&product)
 	c.JSON(http.StatusOK, purchase)
 }
 func DeletePurchase(c *gin.Context) { //这个函数不应使用，因为进货记录不应该删除

@@ -44,6 +44,7 @@ type Purchase struct {
 	Paid       float64 `json:"paid"`                                            //已付
 	Debt       float64 `json:"debt"`                                            //欠款
 	Note       string  `json:"note"`                                            //备注
+	Recall     bool    `json:"recall"`                                          //是否退货
 }
 
 type Order struct {
@@ -58,6 +59,7 @@ type Order struct {
 	Paid       float64 `json:"paid"`                                            //已付
 	Payment    string  `json:"payment"`                                         //付款方式
 	Note       string  `json:"note"`                                            //备注
+	Recall     bool    `json:"recall"`                                          //是否退货
 }
 
 type VIPCard struct {

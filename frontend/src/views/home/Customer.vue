@@ -107,7 +107,7 @@ export default {
         vip_card: {
           id: 0,
           balance: 0,
-          discount: 0,
+          discount: 1,
           note: '已禁用'
         }
       },

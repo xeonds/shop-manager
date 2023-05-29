@@ -60,6 +60,11 @@
             <el-table-column prop="paid" label="已付金额"></el-table-column>
             <el-table-column prop="debt" label="欠款"></el-table-column>
             <el-table-column prop="note" label="备注"></el-table-column>
+            <el-table-column label="操作">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="handleRecallPurchase(row)" :disabled="row.recall">退货</el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </el-card>
       </el-col>
@@ -83,6 +88,11 @@
             <el-table-column prop="paid" label="实收"></el-table-column>
             <el-table-column prop="payment" label="支付方式"></el-table-column>
             <el-table-column prop="note" label="备注"></el-table-column>
+            <el-table-column label="操作">
+              <template #default="{ row }">
+                <el-button link type="primary" @click="handleRecallOrder(row)" :disabled="row.recall">撤单</el-button>
+              </template>
+            </el-table-column>
           </el-table>
         </el-card>
       </el-col>
@@ -299,6 +309,42 @@ export default {
     handlePurchase() {
       this.dialogVisible.purchase = true
     },
+    handleRecallPurchase(purchase) {
+      this.$confirm(`是否要撤销采购 ${purchase.product.name}?`, '注意', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          await purchaseAPI.updatePurchase(purchase.id, {})
+          this.$message.success('撤销采购成功')
+          await this.showPurchaseList()
+          await this.showProductList()
+        } catch (error) {
+          this.$message.error('撤销采购失败: ' + error || '未知错误')
+        }
+      }).catch(() => {
+        this.$message.info('已取消撤销采购')
+      })
+    },
+    handleRecallOrder(order) {
+      this.$confirm(`是否要撤销订单 ${order.id}?`, '注意', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          await orderAPI.updateOrder(order.id, {})
+          this.$message.success('撤销订单成功')
+          await this.showOrderList()
+          await this.showProductList()
+        } catch (error) {
+          this.$message.error('撤销订单失败: ' + error || '未知错误')
+        }
+      }).catch(() => {
+        this.$message.info('已取消撤销订单')
+      })
+    }
   },
   mounted() {
     this.showProductList()
