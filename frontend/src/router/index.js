@@ -31,8 +31,12 @@ export default createRouter({
           component: () => import("../views/home/Customer.vue"),
         },
         {
-          path: "store",
-          component: () => import("../views/home/Store.vue"),
+          path: "product",
+          component: () => import("../views/home/Product.vue"),
+        },
+        {
+          path: "finance",
+          component: () => import("../views/home/Finance.vue"),
         },
       ],
     },
