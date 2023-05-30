@@ -149,7 +149,7 @@
           <el-input-number v-model.number="purchase.paid" :min="0" :precision="2"></el-input-number>
         </el-form-item>
         <el-form-item prop="total_price" label="欠款">
-          <el-input-number v-model.number="purchase.due" :min="0" :precision="2"></el-input-number>
+          <el-input-number v-model.number="purchase.debt" :min="0" :precision="2"></el-input-number>
         </el-form-item>
         <el-form-item prop=" note" label="备注">
           <el-input v-model="purchase.note" type="textarea"></el-input>
