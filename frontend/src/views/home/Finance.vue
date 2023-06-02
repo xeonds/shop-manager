@@ -43,6 +43,16 @@
                 <template #suffix>元</template>
               </el-statistic>
             </el-col>
+            <el-col :span="6">
+              <el-statistic :value="price_income">
+                <template #title>
+                  <div style="display: inline-flex; align-items: center">
+                    总收入
+                  </div>
+                </template>
+                <template #suffix>元</template>
+              </el-statistic>
+            </el-col>
           </el-row>
         </el-card>
         <el-card class="card-row">
@@ -146,11 +156,14 @@ export default {
       return this.purchaseList.reduce((sum, purchase) => sum + purchase.paid, 0)
     },
     price_net_income() {
-      return this.orderList.reduce((sum, order) => sum + order.paid, 0) - this.purchaseList.reduce((sum, purchase) => sum + purchase.paid, 0)
+      return this.orderList.reduce((sum, order) => sum + order.paid, 0) - this.purchaseList.reduce((sum, purchase) => sum + purchase.debt, 0)
     },
     price_debt() {
       const res = this.purchaseList.reduce((sum, purchase) => sum + purchase.debt, 0) - this.orderList.reduce((sum, order) => sum + order.paid, 0)
       return res > 0 ? res : 0
+    },
+    price_income() {
+      return this.orderList.reduce((sum, order) => sum + order.paid, 0)
     },
   },
   methods: {

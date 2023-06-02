@@ -57,7 +57,7 @@ func InitRouter() {
 	orderRouter := apiRouter.Group("/orders")
 	orderRouter.GET("", GetOrders)
 	orderRouter.GET("/:id", GetOrder)
-	orderRouter.GET("/today", GetTodayOrdersCount)
+	orderRouter.GET("/today", GetTodayOrders)
 	orderRouter.POST("", CreateOrder)
 	orderRouter.PUT("/:id", UpdateOrder)
 	orderRouter.DELETE("/:id", DeleteOrder)

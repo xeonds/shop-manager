@@ -113,8 +113,18 @@
             <el-text>订单总览</el-text>
           </template>
           <el-row>
-            <el-col :span="24">
-              <el-statistic title="今日订单数" :value="ordersToday" />
+            <el-col :span="12">
+              <el-statistic title="今日订单数" :value="ordersCountToday" />
+            </el-col>
+            <el-col :span="12">
+              <el-statistic :value="incomeToday" :precision="2">
+                <template #title>
+                  <div style="display: inline-flex; align-items: center">
+                    总进货额
+                  </div>
+                </template>
+                <template #suffix>元</template>
+              </el-statistic>
             </el-col>
           </el-row>
         </el-card>
@@ -157,8 +167,16 @@ export default {
       },
       customerList: [],
       productList: [],
-      ordersToday: 0,
+      ordersToday: [],
     };
+  },
+  computed: {
+    ordersCountToday() {
+      return this.ordersToday.length
+    },
+    incomeToday() {
+      return this.ordersToday.reduce((sum, order) => sum + order.paid, 0)
+    },
   },
   methods: {
     async showCustomerList() {

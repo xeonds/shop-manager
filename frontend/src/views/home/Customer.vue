@@ -18,8 +18,12 @@
             <el-table-column type="selection"></el-table-column>
             <el-table-column prop="id" label="ID"></el-table-column>
             <el-table-column prop="name" label="姓名"></el-table-column>
-            <el-table-column prop="gender" label="性别"></el-table-column>
-            <el-table-column prop="phone" label="手机号"></el-table-column>
+            <!-- <el-table-column prop="gender" label="性别"></el-table-column> -->
+            <el-table-column prop="phone" label="手机号">
+              <template #default="{ row }">
+                <el-text>{{ row.phone.split('').map((_, index) => index < 3 || index > 6 ? _ : '*').join('') }}</el-text>
+              </template>
+            </el-table-column>
             <el-table-column prop="order" label="订单历史">
               <template #default="{ row }">
                 <el-button type="primary" @click="handleShowOrder(row)" link>查看</el-button>
@@ -28,6 +32,12 @@
             <el-table-column prop="vip_card" label="VIP信息">
               <template #default="{ row }">
                 <el-button v-if="row.is_vip" type="primary" @click="handleEditCustomer(row)" link>查看</el-button>
+                <el-text v-else>非VIP</el-text>
+              </template>
+            </el-table-column>
+            <el-table-column prop="vip_card" label="会员卡余额">
+              <template #default="{ row }">
+                <el-text v-if="row.is_vip">{{ row.vip_card.balance }}</el-text>
                 <el-text v-else>非VIP</el-text>
               </template>
             </el-table-column>

@@ -155,19 +155,14 @@ func GetOrders(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, orders)
 }
-func GetTodayOrdersCount(c *gin.Context) {
+func GetTodayOrders(c *gin.Context) {
+	//获取今日订单
 	var orders []Order
-	if err := db.Find(&orders).Error; err != nil {
+	if err := db.Where("created_at > ?", time.Now().Format("2006-01-02")).Find(&orders).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "记录不存在"})
 		return
 	}
-	var count int64 = 0
-	for _, order := range orders {
-		if order.CreatedAt.Format("2006-01-02") == time.Now().Format("2006-01-02") {
-			count++
-		}
-	}
-	c.JSON(http.StatusOK, count)
+	c.JSON(http.StatusOK, orders)
 }
 func GetOrder(c *gin.Context) {
 	var order Order

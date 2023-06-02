@@ -28,7 +28,7 @@
             <el-table-column prop="note" label="备注"></el-table-column>
             <el-table-column label="操作">
               <template #header>
-                <el-input v-model="search" placeholder="搜索" />
+                <el-input v-model="search.product" placeholder="搜索" />
               </template>
               <template #default="{ row }">
                 <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
@@ -44,12 +44,52 @@
         <el-card>
           <template #header>
             <div class="card-header">
-              <el-text>采购记录</el-text>
-              <el-button plain type="primary" @click="handlePurchase">进货</el-button>
+              <el-text>销售记录</el-text>
             </div>
           </template>
-          <el-table :data="purchaseList" style="width: 100%" max-height="512" show-summary
-            :summary-method="getPurchaseSummary">
+          <el-table :data="filteredOrderList" style="width: 100%" max-height="512" show-summary
+            :summary-method="getOrderSummary">
+            <el-table-column prop="id" label="ID"></el-table-column>
+            <el-table-column prop="product.name" label="货物名称"></el-table-column>
+            <el-table-column prop="product.brand" label="品牌"></el-table-column>
+            <el-table-column prop="quantity" label="销售数量（斤）"></el-table-column>
+            <el-table-column prop="product.price" label="销售单价（元/斤）"></el-table-column>
+            <el-table-column prop="total_price" label="金额"></el-table-column>
+            <el-table-column prop="discount" label="优惠金额"></el-table-column>
+            <el-table-column prop="paid" label="实收"></el-table-column>
+            <el-table-column prop="payment" label="支付方式" :filters="[
+              { text: '现金', value: '现金' },
+              { text: '微信', value: '微信' },
+              { text: '支付宝', value: '支付宝' },
+              { text: '会员卡', value: '会员卡' },
+            ]" :filter-method="(value, row) => row.payment == value"></el-table-column>
+            <el-table-column prop="note" label="备注"></el-table-column>
+            <el-table-column label="操作">
+              <template #header>
+                <el-input v-model="search.order" placeholder="搜索" />
+              </template>
+              <template #default="{ row }">
+                <el-button link type="primary" @click="handleRecallOrder(row)" :disabled="row.recall">撤单</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-col>
+    </el-row>
+    <el-row>
+      <el-col :span="24">
+        <el-card>
+          <template #header>
+            <div class="card-header">
+              <el-text>采购记录</el-text>
+              <div style="display: inline-flex; align-items: center">
+                <el-button plain type="primary" @click="handlePurchase">进货</el-button>
+                <el-button plain type="primary" @click="() => is_table_show = !is_table_show">切换显示</el-button>
+              </div>
+            </div>
+          </template>
+          <el-table :data="filteredPurchaseList" style="width: 100%" :max-height="512" show-summary
+            :summary-method="getPurchaseSummary" v-if="is_table_show">
             <el-table-column prop="id" label="ID"></el-table-column>
             <el-table-column prop="product.name" label="货物名称"></el-table-column>
             <el-table-column prop="product.brand" label="品牌"></el-table-column>
@@ -62,36 +102,11 @@
             <el-table-column prop="debt" label="欠款"></el-table-column>
             <el-table-column prop="note" label="备注"></el-table-column>
             <el-table-column label="操作">
+              <template #header>
+                <el-input v-model="search.purchase" placeholder="搜索" />
+              </template>
               <template #default="{ row }">
                 <el-button link type="primary" @click="handleRecallPurchase(row)" :disabled="row.recall">退货</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-col>
-    </el-row>
-    <el-row>
-      <el-col :span="24">
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <el-text>销售记录</el-text>
-            </div>
-          </template>
-          <el-table :data="orderList" style="width: 100%" max-height="512" show-summary :summary-method="getOrderSummary">
-            <el-table-column prop="id" label="ID"></el-table-column>
-            <el-table-column prop="product.name" label="货物名称"></el-table-column>
-            <el-table-column prop="product.brand" label="品牌"></el-table-column>
-            <el-table-column prop="quantity" label="销售数量（斤）"></el-table-column>
-            <el-table-column prop="product.price" label="销售单价（元/斤）"></el-table-column>
-            <el-table-column prop="total_price" label="金额"></el-table-column>
-            <el-table-column prop="discount" label="优惠金额"></el-table-column>
-            <el-table-column prop="paid" label="实收"></el-table-column>
-            <el-table-column prop="payment" label="支付方式"></el-table-column>
-            <el-table-column prop="note" label="备注"></el-table-column>
-            <el-table-column label="操作">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="handleRecallOrder(row)" :disabled="row.recall">撤单</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -212,20 +227,42 @@ export default {
         edit: false,
         purchase: false
       },
-      search: '',
+      search: {
+        product: '',
+        order: '',
+        purchase: ''
+      },
+      is_table_show: false
     }
   },
   computed: {
     filteredProductList: function () {
       return this.productList.filter((product) => {
         return (
-          product.name.toLowerCase().includes(this.search.toLowerCase()) ||
-          product.description.toLowerCase().includes(this.search.toLowerCase()) ||
-          product.price.toString().includes(this.search) ||
-          product.quantity.toString().includes(this.search)
+          product.name.toLowerCase().includes(this.search.product.toLowerCase()) ||
+          product.description.toLowerCase().includes(this.search.product.toLowerCase()) ||
+          product.price.toString().includes(this.search.product) ||
+          product.location.toLowerCase().includes(this.search.product.toLowerCase())
         );
       });
-    }
+    },
+    filteredOrderList: function () {
+      return this.orderList.filter((order) => {
+        return (
+          order.product.name.toLowerCase().includes(this.search.order.toLowerCase()) ||
+          order.payment.toLowerCase().includes(this.search.order.toLowerCase())
+        );
+      });
+    },
+    filteredPurchaseList: function () {
+      return this.purchaseList.filter((purchase) => {
+        return (
+          purchase.product.name.toLowerCase().includes(this.search.purchase.toLowerCase()) ||
+          purchase.product.brand.toLowerCase().includes(this.search.purchase.toLowerCase()) ||
+          purchase.supplier.toLowerCase().includes(this.search.purchase.toLowerCase())
+        );
+      });
+    },
   },
   methods: {
     async showProductList() {
